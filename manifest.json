@@ -6,20 +6,24 @@
         "en": "Web-based cross-platform XMPP client",
         "fr": "Client XMPP multiplateforme basé sur le Web"
     },
-    "version": "0.18rc14~ynh1",
+    "version": "0.14.1~ynh1",
+    "requirements": {
+        "yunohost": ">= 3.4.0"
+    },
     "url": "https://movim.eu",
     "license": "AGPL-3.0-or-later",
     "maintainer": {
-        "name": "",
-        "email": ""
+        "name": "Jean-Baptiste Holcroft",
+        "email": "jean-baptiste@holcroft.fr"
     },
-    "requirements": {
-        "yunohost": ">= 3.8.1"
-    },
-    "multi_instance": false,
+    "previous_maintainers": [{
+        "name": "src386",
+        "email": "soyouz@src386.org",
+        "url": "http://github.com/src386"
+    }],
     "services": [
         "nginx",
-        "php7.0-fpm",
+        "php-fpm",
         "postgresql",
         "metronome"
     ],
@@ -57,19 +61,28 @@
                 "name": "password",
                 "type": "password",
                 "ask": {
-                    "en": "Set the administrator password",
-                    "fr": "Définissez le mot de passe administrateur"
+                    "en": "Administrator password",
+                    "fr": "Mot de passe administrateur"
+                },
+                "example" : "password"
+            },
+            {
+                "name": "language",
+                "type": "string",
+                "ask": {
+                    "en": "Pod language",
+                    "fr": "Langue du pod"
                 },
                 "example": "Choose a password"
             },
             {
-                "name": "is_public",
+                "name": "ssoenabled",
                 "type": "boolean",
                 "ask": {
                     "en": "Is it a public application?",
                     "fr": "Est-ce une application publique ?"
                 },
-                "default": true
+                "default": false
             }
         ]
     }

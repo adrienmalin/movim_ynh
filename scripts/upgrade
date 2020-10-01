@@ -59,6 +59,16 @@ if [ -z "$final_path" ]; then
 	ynh_app_setting_set --app=$app --key=final_path --value=$final_path
 fi
 
+
+# Fix ssoenabled as a boolean value
+if [ "$ssoenabled" = "Yes" ]; then
+	ynh_app_setting_set $app ssoenabled 1
+	ssoenabled=1
+elif [ "$ssoenabled" = "No" ]; then
+	ynh_app_setting_set $app ssoenabled 0
+	ssoenabled=0
+fi
+
 #=================================================
 # BACKUP BEFORE UPGRADE THEN ACTIVE TRAP
 #=================================================
@@ -87,7 +97,8 @@ path_url=$(ynh_normalize_url_path $path_url)
 #=================================================
 ynh_script_progression --message="Stopping a systemd service..." --weight=23
 
-ynh_systemd_action --service_name=$app --action="stop" --log_path="/var/log/$app/$app.log"
+ynh_install_app_dependencies php-curl php-cli php-mbstring php-pgsql php-xml \
+	postgresql php7.0-pgsql
 
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
@@ -159,7 +170,8 @@ chown -R $app $final_path/src/Movim/Bootstrap.php
 ynh_script_progression --message="Configuring database.." --weight=1
 (
 	cd "$final_path"
-	ynh_exec_as $app php"${phpversion}" composer.phar movim:migrate
+	php vendor/bin/phinx migrate
+	php vendor/bin/phinx seed:run -s FromModlToEloquent
 )
 
 #=================================================
@@ -178,17 +190,29 @@ ynh_add_systemd_config
 #=================================================
 ynh_script_progression --message="Starting a systemd service..." --weight=1
 
-ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+# SSOwat configuration
+if [[ "$ssoenabled" = "No" ]]; then
+    ynh_app_setting_set "$app" skipped_uris "/"
+    #(cd "$final_path" && php mud.php config --xmppwhitelist="$domain")
+    yunohost app ssowatconf
+    undo_sso_patch
+else
+    ynh_app_setting_set "$app" unprotected_uris "/"
+fi
 
 #=================================================
 # RELOAD NGINX
 #=================================================
 ynh_script_progression --message="Reloading NGINX web server..." --weight=1
 
-ynh_systemd_action --service_name=nginx --action=reload
+# Create a dedicated systemd config
+ynh_replace_string "__URL__"  "${domain}"	../conf/systemd.service
+ynh_replace_string "__PORT__" "${port}"         ../conf/systemd.service
+ynh_add_systemd_config
 
 #=================================================
 # END OF SCRIPT
 #=================================================
 
-ynh_script_progression --message="Upgrade of Movim completed" --last
+# Reload services
+service nginx reload

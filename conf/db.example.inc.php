@@ -10,7 +10,7 @@ $conf = [
     'password'    => '__DB_PWD__',
     # Where can we find the database ?
     'host'        => 'localhost',
-    # The port number, 3306 for MySQL and 5432 for PostgreSQL
+    # The port number, 3306 for MySQL and 5432 for PostGreSQL
     'port'        => 5432,
     # The database name
     'database'    => '__DB_NAME__'
